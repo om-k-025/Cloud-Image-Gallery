@@ -40,7 +40,7 @@ flowchart TD
     CloudRun -- "2. List Blobs & Generate V4 Signed URL" --> GCS
     CloudRun -- "3. Return Webpage + Signed URLs" --> User
     User -- "4. Fetch Image via Signed URL (10-min valid)" --> GCS
-    User -- "X Direct Access without Signature" -->|HTTP 403 Forbidden| GCS
+    User -- "Direct Access without Signature (HTTP 403 Forbidden)" --> GCS
 
     CloudRun -- "Logs (JSON to stdout)" --> Logging
     Logging --> LogMetric

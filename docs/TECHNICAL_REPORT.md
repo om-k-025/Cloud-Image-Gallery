@@ -99,7 +99,7 @@ flowchart TD
 
     %% Direct Media Download via Signed URL
     ClientBrowser -- "5. GET /blob?X-Goog-Signature=... (Direct Media Fetch)" --> PrivateBucket
-    ClientBrowser -. "Direct Unsigned Access\n(https://storage.googleapis.com/...)" .->|HTTP 403 Forbidden| PrivateBucket
+    ClientBrowser -- "Direct Unsigned Access (HTTP 403 Forbidden)" --> PrivateBucket
 
     %% Logging and Monitoring
     WebContainer -- "6. Structured JSON Logs (stdout)" --> CloudLogging
