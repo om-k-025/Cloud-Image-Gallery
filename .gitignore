@@ -1,0 +1,37 @@
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables & Secrets (CRITICAL FOR CLOUD SECURITY)
+.env
+*.env.local
+
+# GCP Service Account Private Keys (NEVER COMMIT THESE)
+*.json
+!mcp_config.json
+service-account-key.json
+gcp-credentials.json
+credentials.json
+
+# Local Upload Storage (used only when testing offline without GCS)
+local_storage/
+uploads/
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Cloud-Based Image Gallery{% endblock %} - GCP Cloud Project</title>
+  <meta name="description" content="Secure Cloud-Based Image Gallery demonstrating Google Cloud Platform, Cloud Run, Cloud Storage, Least-Privilege IAM, and V4 Signed URLs.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <a href="{{ url_for('gallery') if session.get('user') else url_for('login') }}" class="brand-link" id="brand-logo-link">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+          </svg>
+        </div>
+        <span>CloudGallery</span>
+      </a>
+
+      {% if session.get('user') %}
+      <div class="nav-right">
+        <!-- Storage Indicator Pill -->
+        <div class="storage-pill" title="Storage Configuration">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>10-Min Signed URLs</span>
+        </div>
+
+        <!-- User Role Badge -->
+        <div class="user-badge" id="user-badge-info">
+          <span>{{ session.get('display_name', session.get('user')) }}</span>
+          <span class="role-tag {{ 'role-admin' if session.get('role') == 'admin' else 'role-viewer' }}">
+            {{ session.get('role') }}
+          </span>
+        </div>
+
+        <!-- Navigation Links -->
+        <a href="{{ url_for('gallery') }}" class="btn btn-outline btn-sm" id="nav-gallery-btn">Gallery</a>
+        {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm" id="nav-upload-btn">Upload</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" id="nav-logout-btn">Logout</a>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="main-wrapper">
+    <!-- Flash Messages Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash-alert flash-{{ category }}" role="alert">
+              <span>{{ message }}</span>
+              <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:1.1rem;">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Cloud Computing Mini-Project &bull; GCP Cloud Run &amp; Cloud Storage &bull; Least-Privilege IAM &bull; V4 Signed URLs</p>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

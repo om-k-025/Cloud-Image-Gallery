@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Image - Cloud Gallery{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+  <div class="upload-card">
+    <div style="margin-bottom: 1.5rem;">
+      <a href="{{ url_for('gallery') }}" class="btn btn-outline btn-sm" style="margin-bottom: 1rem;">
+        &larr; Back to Gallery
+      </a>
+      <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;">Upload to Cloud Storage</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Images are uploaded directly to the private GCS bucket. No public access is permitted.
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" id="upload-form">
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <input 
+          type="file" 
+          name="file" 
+          id="file-input" 
+          accept=".jpg,.jpeg,.png,.gif,.webp" 
+          style="display: none;" 
+          required
+        >
+        <div class="dropzone-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.4rem;">Choose an image or drag &amp; drop here</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          Supported formats: <strong style="color: var(--text-main);">{{ allowed_extensions }}</strong>
+        </p>
+        <p style="color: var(--text-dim); font-size: 0.78rem; margin-top: 0.25rem;">
+          Max file size: <strong style="color: var(--text-main);">{{ max_size_mb }} MB</strong>
+        </p>
+      </div>
+
+      <!-- Preview container -->
+      <div class="preview-container" id="preview-container">
+        <img id="image-preview" src="" alt="Selected image preview" class="preview-image">
+        <div id="preview-meta" style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);"></div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+        <button type="submit" class="btn btn-primary" id="submit-upload-btn" style="flex: 1;" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span id="submit-text">Select a File to Upload</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const previewContainer = document.getElementById('preview-container');
+  const imagePreview = document.getElementById('image-preview');
+  const previewMeta = document.getElementById('preview-meta');
+  const submitBtn = document.getElementById('submit-upload-btn');
+  const submitText = document.getElementById('submit-text');
+  const uploadForm = document.getElementById('upload-form');
+
+  const MAX_BYTES = {{ max_size_mb }} * 1024 * 1024;
+  const ALLOWED = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+  function handleFile(file) {
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED.includes(ext)) {
+      alert('Invalid file format. Please upload JPG, PNG, GIF, or WEBP only.');
+      fileInput.value = '';
+      resetPreview();
+      return;
+    }
+
+    if (file.size > MAX_BYTES) {
+      alert(`File is too large (${(file.size / (1024*1024)).toFixed(2)} MB). Maximum allowed size is {{ max_size_mb }} MB.`);
+      fileInput.value = '';
+      resetPreview();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imagePreview.src = e.target.result;
+      previewMeta.textContent = `${file.name} • ${(file.size / 1024).toFixed(1)} KB`;
+      previewContainer.style.display = 'block';
+      submitBtn.disabled = false;
+      submitText.textContent = `Upload "${file.name}" to Cloud`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetPreview() {
+    previewContainer.style.display = 'none';
+    submitBtn.disabled = true;
+    submitText.textContent = 'Select a File to Upload';
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    handleFile(e.target.files[0]);
+  });
+
+  // Drag and drop event listeners
+  ['dragenter', 'dragover'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  uploadForm.addEventListener('submit', () => {
+    submitBtn.disabled = true;
+    submitText.textContent = 'Uploading to Cloud Storage...';
+  });
+</script>
+{% endblock %}

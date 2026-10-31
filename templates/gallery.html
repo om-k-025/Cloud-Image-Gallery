@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Image Gallery - Cloud Gallery{% endblock %}
+
+{% block content %}
+<!-- Gallery Header -->
+<div class="gallery-header">
+  <div class="gallery-title-area">
+    <h1>Cloud Image Gallery</h1>
+    <p>Secure object storage with time-limited V4 cryptographic signed URLs</p>
+  </div>
+
+  <div class="gallery-actions">
+    {% if role == 'admin' %}
+      <a href="{{ url_for('upload') }}" class="btn btn-primary" id="btn-upload-image">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Upload New Image</span>
+      </a>
+    {% else %}
+      <div class="storage-pill" style="color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>Read-Only Viewer Access (Upload/Delete Restricted)</span>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Cloud Architecture & Security Banner -->
+<div class="cloud-security-banner">
+  <div class="security-points">
+    <div class="sec-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      <span>Storage: <strong>{{ storage_mode }}</strong></span>
+    </div>
+    <div class="sec-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Public Access: <strong>PREVENTED (Private)</strong></span>
+    </div>
+    <div class="sec-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Delivery: <strong>{{ signed_expiry }}-Min Cryptographic Signed URLs</strong></span>
+    </div>
+  </div>
+  <div class="sec-item" style="font-family: var(--font-mono); font-size: 0.8rem;">
+    <span>Total Images: <strong>{{ images|length }}</strong></span>
+  </div>
+</div>
+
+<!-- Images Grid -->
+{% if images %}
+<div class="gallery-grid" id="gallery-grid">
+  {% for img in images %}
+  <div class="gallery-card" id="card-{{ loop.index }}">
+    <div class="card-img-wrapper" onclick="openLightbox('{{ img.url }}', '{{ img.name }}')">
+      <img src="{{ img.url }}" alt="{{ img.name }}" class="gallery-thumb" loading="lazy">
+      <div class="card-hover-overlay">
+        <span class="btn btn-outline btn-sm" style="background: rgba(0,0,0,0.6);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+          <span>View Full Size</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="card-filename" title="{{ img.name }}">{{ img.name }}</div>
+      <div class="card-meta">
+        <span>{{ img.size_kb }} KB</span>
+        <span>{{ img.uploaded_at }}</span>
+      </div>
+
+      <div class="card-actions">
+        <a href="{{ img.url }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:0.75rem;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>Signed Link</span>
+        </a>
+
+        {% if role == 'admin' %}
+        <form method="POST" action="{{ url_for('delete', filename=img.name) }}" onsubmit="return confirm('Are you sure you want to permanently delete this image from cloud storage?');" style="margin:0;">
+          <button type="submit" class="btn btn-danger btn-sm" title="Delete object (Admin only)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Delete</span>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="empty-state">
+  <div class="empty-icon">&#128444;&#65039;</div>
+  <h2 style="font-size: 1.35rem; margin-bottom: 0.5rem;">No Images In Cloud Bucket Yet</h2>
+  <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem;">
+    Your cloud bucket is currently empty.
+    {% if role == 'admin' %}
+      Click below to upload your first image.
+    {% else %}
+      Log in as an Administrator to upload images.
+    {% endif %}
+  </p>
+  {% if role == 'admin' %}
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload First Image</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Full Size Lightbox Modal -->
+<div class="modal-overlay" id="lightbox-modal" onclick="closeLightbox(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeLightbox()">&times;</button>
+    <img id="modal-image" src="" alt="Full view" class="modal-img">
+    <div class="modal-meta" id="modal-caption"></div>
+    <div style="margin-top: 0.75rem;">
+      <a id="modal-direct-link" href="#" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+        Open Direct Signed URL in New Tab &rarr;
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openLightbox(url, name) {
+    const modal = document.getElementById('lightbox-modal');
+    const modalImg = document.getElementById('modal-image');
+    const modalCaption = document.getElementById('modal-caption');
+    const modalDirectLink = document.getElementById('modal-direct-link');
+
+    modalImg.src = url;
+    modalCaption.textContent = name;
+    modalDirectLink.href = url;
+    modal.classList.add('active');
+  }
+
+  function closeLightbox(e) {
+    const modal = document.getElementById('lightbox-modal');
+    modal.classList.remove('active');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>
+{% endblock %}
